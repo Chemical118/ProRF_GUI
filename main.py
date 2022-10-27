@@ -1,5 +1,5 @@
 import ryven
 
 ryven.run_ryven(
-    # args...
+    window_title='ProRF GUI'
 )

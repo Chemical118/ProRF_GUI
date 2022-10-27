@@ -45,7 +45,27 @@ class FASTAInputWidget(IWB, QPushButton):
         self.path_chosen.emit(file_path)
 
 
+class FolderInputWidget(IWB, QPushButton):
+    path_chosen = Signal(str)
+
+    def __init__(self, params):
+        IWB.__init__(self, params)
+        QPushButton.__init__(self, "Select")
+
+        self.clicked.connect(self.button_clicked)
+
+    def button_clicked(self):
+        file_path = QFileDialog.getExistingDirectory(self, 'Select Dataset folder')
+        try:
+            file_path = os.path.relpath(file_path)
+        except ValueError:
+            return
+
+        self.path_chosen.emit(file_path)
+
+
 export_widgets(
     XLSXInputWidget,
     FASTAInputWidget,
+    FolderInputWidget,
 )

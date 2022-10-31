@@ -2,12 +2,6 @@
 
 import os
 import sys
-from ryven.NENV import *
-
-print('\\'.join(os.path.dirname(os.path.abspath(__file__)).split('\\')[:-2]) + '\\runtime\\bin\\julia.exe')
-from julia.api import Julia
-
-jl = Julia(runtime='\\'.join(os.path.dirname(os.path.abspath(__file__)).split('\\')[:-2]) + '\\runtime\\bin\\julia.exe',
 
 from ryven.main.nodes_package import NodesPackage
 
@@ -57,10 +51,9 @@ def run(qt_app=None, qt_api='pyside2',
 
     # auto startup dialog
     t = NodesPackage('ProRF')
-    a = os.path.dirname(os.path.abspath(__file__)) + '\\ProRF'
     editor_init_config = {'action': 'open project', 'required packages': [NodesPackage('ProRF')],
                           'content': {'general info': {'type': 'Ryven project file', 'ryven version': 'v3.1'},
-                                      'required packages': [{'name': 'ProRF', 'dir': os.path.dirname(os.path.abspath(__file__)) + '\\ProRF'}],
+                                      'required packages': [{'name': 'ProRF', 'dir': os.path.dirname(os.path.abspath(__file__)) + '\\src\\ProRF'}],
                                       'scripts': [{'title': 'ProRF GUI', 'variables': {}, 'flow': {}, 'GID': 1}]}}
 
     window_theme = apply_stylesheet('dark')

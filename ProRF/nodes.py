@@ -1,8 +1,12 @@
-import numpy
 from ryven.NENV import *
+
+from julia.api import Julia
+jl = Julia(runtime='\\'.join(os.path.dirname(os.path.abspath(__file__)).split('\\')[:-2]) + '\\runtime\\bin\\julia.exe')
+
+from julia import Base
+
 from julia import ProRF as p
 import numpy as np
-from datetime import datetime as d
 
 widgets = import_widgets(__file__)
 protein_dict = ['vol', 'pI', 'hyd', 'vol, pI', 'vol, hyd', 'pI, hyd', 'all']
@@ -258,6 +262,7 @@ class FitModelNode(NodeBase):
 
     def update_event(self, inp=-1):
         if type(self.input(0)) == np.ndarray and type(self.input(1)) == np.ndarray and \
+                self.input(3) is not None and self.input(4) is not None and self.input(6) is not None and \
                 self.input(2) > 0 and self.input(3) > 0 and (self.input(5) == -1 or self.input(5) > 0) and \
                 0 < self.input(4) < 1 and (self.input(6) == '' or type(self.input(6)) == dict):
 
@@ -269,7 +274,7 @@ class FitModelNode(NodeBase):
                 seed = arg_dict.get('data_state', p.rand(p.UInt64))
             arg_dict['data_state'] = seed
             arg_dict['test_size'] = self.input(4)
-            
+
             model = p.rf_model(self.input(0), self.input(1), self.input(2), self.input(3), val_mode=True, **arg_dict)
             self.set_output_val(0, ViewData(model, self.input(4), seed))
 
@@ -296,7 +301,7 @@ class PredictNode(NodeBase):
 class PredictViewNode(NodeBase):
     """View predict result"""
 
-    title = 'View predict result'
+    title = 'View predict'
     init_inputs = [
         NodeInputBP(label='PY'),
         NodeInputBP(label='Y'),
@@ -310,7 +315,7 @@ class PredictViewNode(NodeBase):
     main_widget_pos = 'below ports'
 
     def update_event(self, inp=-1):
-        if self.session.gui and type(self.input(0)) == ViewData and type(self.input(1)) == numpy.ndarray:
+        if self.session.gui and type(self.input(0)) == ViewData and type(self.input(1)) == np.ndarray:
             py, size, seed = self.input(0).get_data()
             y = self.input(1)
             n = np.size(y)
@@ -344,9 +349,8 @@ class ViewImportanceNode(NodeBase):
     main_widget_pos = 'below ports'
 
     def update_event(self, inp=-1):
-        if self.session.gui and type(self.input(0)) == ViewData and type(self.input(1)) == numpy.ndarray and \
+        if self.session.gui and type(self.input(0)) == ViewData and type(self.input(1)) == np.ndarray and \
                 type(self.input(2)) == list and (self.input(4) == '' or type(self.input(4)) == dict):
-
             imp_arg_dict = dict() if self.input(4) == '' else self.input(4)
             imp_arg_dict['imp_iter'] = self.input(3)
             imp_arg_dict['val_mode'] = True
@@ -355,6 +359,43 @@ class ViewImportanceNode(NodeBase):
             f = p.rf_importance(p.RF(''), model, self.input(1), self.input(2), **imp_arg_dict)
             self.main_widget().show_result(f, self.input(2), self.input(5))
             self.set_output_val(0, f)
+
+
+class GetArgumentNode(NodeBase):
+    """Get the best arguments to fit model"""
+
+    title = 'Get argument'
+    init_inputs = [
+        NodeInputBP(label='X'),
+        NodeInputBP(label='Y'),
+        NodeInputBP(label='iter', dtype=dtypes.Integer(default=10, bounds=(1, 100))),
+        NodeInputBP(label='test_size', dtype=dtypes.Float(default=0.3)),
+        NodeInputBP(label='base_tree', dtype=dtypes.Integer(default=50, bounds=(1, 1000))),
+        NodeInputBP(label='arg', dtype=dtypes.Data(default='', size='m')),
+    ]
+    init_outputs = [
+        NodeOutputBP(label='feat'),
+        NodeOutputBP(label='tree'),
+        NodeOutputBP(label='test_size'),
+        NodeOutputBP(label='depth'),
+    ]
+
+    def update_event(self, inp=-1):
+        if type(self.input(0)) == np.ndarray and type(self.input(1)) == np.ndarray and 0 < self.input(3) < 1 and \
+                (self.input(5) == '' or type(self.input(5)) == dict):
+            arg_dict = dict() if self.input(5) == '' else self.input(5)
+            arg_dict['iter'] = self.input(2)
+            arg_dict['test_size'] = self.input(3)
+            arg_dict['base_tree'] = self.input(4)
+            arg_dict['val_mode'] = True
+            print('up')
+
+            feat, tree, depth = p.get_rf_value(self.input(0), self.input(1), **arg_dict)
+            print('upend')
+            self.set_output_val(0, feat)
+            self.set_output_val(1, tree)
+            self.set_output_val(2, self.input(3))
+            self.set_output_val(3, depth)
 
 
 class PrintNode(DualNodeBase):
@@ -366,7 +407,6 @@ class PrintNode(DualNodeBase):
     init_outputs = [
         NodeOutputBP(type_='exec'),
     ]
-    color = '#5d95de'
 
     def __init__(self, params):
         super().__init__(params, active=True)
@@ -386,6 +426,7 @@ export_nodes(
     ViewImportanceNode,
     MinMaxNormNode,
     FitModelNode,
+    GetArgumentNode,
     PredictNode,
     PrintNode,
 )

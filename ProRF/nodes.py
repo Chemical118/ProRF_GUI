@@ -1,10 +1,4 @@
 from ryven.NENV import *
-
-from julia.api import Julia
-jl = Julia(runtime='\\'.join(os.path.dirname(os.path.abspath(__file__)).split('\\')[:-2]) + '\\runtime\\bin\\julia.exe')
-
-from julia import Base
-
 from julia import ProRF as p
 import numpy as np
 

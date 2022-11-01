@@ -3,12 +3,6 @@
 import os
 import sys
 from ryven.NENV import *
-
-print('\\'.join(os.path.dirname(os.path.abspath(__file__)).split('\\')[:-2]) + '\\runtime\\bin\\julia.exe')
-from julia.api import Julia
-
-jl = Julia(runtime='\\'.join(os.path.dirname(os.path.abspath(__file__)).split('\\')[:-2]) + '\\runtime\\bin\\julia.exe',
-
 from ryven.main.nodes_package import NodesPackage
 
 from ryven.main.utils import abs_path_from_package_dir
@@ -56,8 +50,7 @@ def run(qt_app=None, qt_api='pyside2',
     db.addApplicationFont(abs_path_from_package_dir('resources/fonts/asap/Asap-Regular.ttf'))
 
     # auto startup dialog
-    t = NodesPackage('ProRF')
-    a = os.path.dirname(os.path.abspath(__file__)) + '\\ProRF'
+
     editor_init_config = {'action': 'open project', 'required packages': [NodesPackage('ProRF')],
                           'content': {'general info': {'type': 'Ryven project file', 'ryven version': 'v3.1'},
                                       'required packages': [{'name': 'ProRF', 'dir': os.path.dirname(os.path.abspath(__file__)) + '\\ProRF'}],
